@@ -1,7 +1,7 @@
 import * as ML from '../vendor/maplibre/maplibre-gl.js';
 import { PMTiles, Protocol } from '../vendor/pmtiles.js';
 import { ChunkedArchiveSource } from './archive.js';
-import { CATEGORIES, formatDistance } from './core.js';
+import { CATEGORIES, formatDistance, placeTypeLabel } from './core.js';
 import { readStaticAsset } from './static-assets.js';
 
 function pinImage(color) {
@@ -74,6 +74,15 @@ export class TravelMap {
   }
   featureCollection() { return { type: 'FeatureCollection', features: this.places.map(p => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [p.position.lng, p.position.lat] }, properties: { id: p.id, category: CATEGORIES[p.category] ? p.category : 'attraction' } })) }; }
   setPlaces(places) { this.places = places; if (this.loaded) this.map.getSource('attractions').setData(this.featureCollection()); }
+  fitPlaces(places) {
+    if (!this.loaded || !places.length) return;
+    const lngs = places.map(p => p.position.lng), lats = places.map(p => p.position.lat);
+    const padding = this.map.getPadding();
+    this.map.fitBounds([[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]], {
+      padding: { top: padding.top + (padding.top ? 16 : 75), bottom: padding.bottom + 30, left: 35, right: 35 },
+      maxZoom: 14, duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 500, retainPadding: false,
+    });
+  }
   flyTo(position, zoom = 13) { this.map?.flyTo({ center: [position.lng, position.lat], zoom, duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 700 }); }
   select(id, fly = true) {
     this.selected = id;
@@ -85,7 +94,7 @@ export class TravelMap {
     if (!place) return;
     const content = document.createElement('div');
     const title = document.createElement('p'); title.className = 'map-popup-title'; title.textContent = place.nameZh || place.nameEn;
-    const meta = document.createElement('p'); meta.className = 'map-popup-meta'; meta.textContent = `${CATEGORIES[place.category]?.name || '景点'} · ${formatDistance(place.distance || 0)}`;
+    const meta = document.createElement('p'); meta.className = 'map-popup-meta'; meta.textContent = `${placeTypeLabel(place)} · ${formatDistance(place.distance || 0)}`;
     content.append(title, meta);
     this.popup = new ML.Popup({ closeButton: false, offset: 42, maxWidth: '210px' }).setLngLat([place.position.lng, place.position.lat]).setDOMContent(content).addTo(this.map);
     if (fly) this.flyTo(place.position, Math.max(14, this.map.getZoom()));

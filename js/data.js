@@ -9,6 +9,14 @@ export class PlacesStore {
   async nearby(center, radius) {
     const bounds = searchBounds(center, radius);
     const shards = this.index.shards.filter(s => intersects(s.bounds, bounds));
+    return this.loadShards(shards);
+  }
+  async all() { return this.loadShards(this.index.shards); }
+  async city(cityId) {
+    const shards = this.index.shards.filter(s => !s.cities || s.cities.includes(cityId));
+    return (await this.loadShards(shards)).filter(p => p.city === cityId);
+  }
+  async loadShards(shards) {
     const batches = [];
     // Bound concurrency instead of launching all nationwide requests at once.
     for (let i = 0; i < shards.length; i += 6) {

@@ -13,13 +13,15 @@
 <!--
 # Data and map credits
 
-Attraction facts in the initial dataset are from [Wikidata](https://www.wikidata.org/wiki/Wikidata:Licensing), released under CC0. Entity links and collection coverage are recorded in `data/index.json`, `data/report.json` and each attraction record. This is a starter selection, not a full national inventory.
+Place facts include [Wikidata](https://www.wikidata.org/wiki/Wikidata:Licensing), released under CC0, and an independently attributed OpenStreetMap selection under ODbL. Coordinates, venue checks and source links are recorded in each place. Coverage is in `data/index.js` and `data/report.js`. This is a curated selection, not a full national inventory.
 
-The bundled map is a regional extract of [Protomaps Basemap](https://docs.protomaps.com/basemaps/downloads), derived from OpenStreetMap and Natural Earth, distributed by Protomaps as an ODbL Produced Work. © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright). Map provenance is in `maps/manifest.json`. Preserve visible map attribution. No tiles were scraped from OSM's public tile service.
+The bundled map is a regional extract of [Protomaps Basemap](https://docs.protomaps.com/basemaps/downloads), derived from OpenStreetMap and Natural Earth, distributed by Protomaps as an ODbL Produced Work. © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright). Map provenance is in `maps/manifest.js`. Preserve visible map attribution. No tiles were scraped from OSM's public tile service.
 
-If collecting OSM attraction data, the resulting OSM-derived database is subject to the [Open Database License](https://opendatacommons.org/licenses/odbl/1-0/). Distribute its appropriate attribution, source and license along with exported files; keep independently licensed data provenance.
+The OSM-derived place subset is available under the [Open Database License](https://opendatacommons.org/licenses/odbl/1-0/). Its records link to the original OSM objects, with Nominatim used for one-time coordinate lookup. Keep source attribution and independently licensed provenance with exported files.
 
-MapLibre GL JS and PMTiles use BSD licenses; included copies are under `vendor/`. The Protomaps style license is in `maps/STYLE-LICENSE.txt`. The map's Noto Sans glyph data uses the SIL Open Font License in `maps/fonts/OFL.txt`. The interface uses the visitor's ordinary installed fonts; no online font service is loaded.
+Some restaurant coordinates contain Food Standards Agency data © Crown copyright and database right 2026, licensed under the Open Government Licence v3.0. Business records are linked from the corresponding places; hygiene ratings and logos are not reproduced. Buffet service is verified independently against the restaurant's official website, with dated evidence stored in each dining record.
+
+MapLibre GL JS and PMTiles use BSD licenses; included copies are under `vendor/`. Map, style and font licenses are in `maps/licenses.js`. The map's Noto Sans glyph data uses the SIL Open Font License. The interface uses the visitor's ordinary installed fonts; no online font service is loaded.
 
 -->
 </head>
@@ -51,7 +53,16 @@ MapLibre GL JS and PMTiles use BSD licenses; included copies are under `vendor/`
     </header>
     <div class="results-heading" id="results-heading">
       <div><h1 id="results-title">探索伦敦</h1><p id="results-meta" aria-live="polite">正在加载景点…</p></div>
-      <label class="radius-select"><select id="radius" aria-label="搜索半径"><option value="2">2 km</option><option value="5">5 km</option><option value="10">10 km</option><option value="25" selected>25 km</option><option value="50">50 km</option></select><span data-icon="chevron-down"></span></label>
+      <label class="radius-select"><select id="radius" aria-label="区域范围"><option value="2">2 km</option><option value="5">5 km</option><option value="10">10 km</option><option value="25" selected>25 km</option><option value="50">50 km</option><option value="all">全部</option></select><span data-icon="chevron-down"></span></label>
+    </div>
+    <div class="dining-filters" id="dining-filters" role="group" aria-label="餐饮筛选" hidden>
+      <label class="cuisine-select"><select id="cuisine" aria-label="选择餐饮菜系"><option value="all">全部菜系</option></select><span data-icon="chevron-down"></span></label>
+      <button class="dining-chip" id="buffet-filter" type="button" aria-pressed="false">自助餐</button>
+    </div>
+    <div class="university-filters" id="university-filters" role="group" aria-label="大学范围" hidden>
+      <button class="dining-chip" type="button" data-university-scope="nearby" aria-pressed="false">附近</button>
+      <button class="dining-chip active" type="button" data-university-scope="uk" aria-pressed="true">全英国</button>
+      <span>QS 2027 · 前600</span>
     </div>
     <div class="results-list" id="results" aria-label="景点搜索结果" aria-busy="true"></div>
     <section class="detail" id="detail" aria-label="景点详情" hidden></section>
@@ -79,7 +90,7 @@ MapLibre GL JS and PMTiles use BSD licenses; included copies are under `vendor/`
     <p>发现英国，慢慢走。</p>
     <dl id="dataset-info"></dl>
     <p class="fine-print">景点位置与入口可能不同，出发前请核对官网。</p>
-    <div class="source-links"><a href="https://www.wikidata.org/wiki/Wikidata:Licensing" target="_blank" rel="noopener noreferrer">Wikidata · CC0</a><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap · ODbL</a><a href="https://protomaps.com" target="_blank" rel="noopener noreferrer">Protomaps</a></div>
+    <div class="source-links"><a href="https://www.wikidata.org/wiki/Wikidata:Licensing" target="_blank" rel="noopener noreferrer">Wikidata · CC0</a><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap · ODbL</a><a href="https://protomaps.com" target="_blank" rel="noopener noreferrer">Protomaps</a><a href="https://ratings.food.gov.uk/open-data" target="_blank" rel="noopener noreferrer">Food Standards Agency</a></div>
   </dialog>
   <noscript><div class="noscript">请启用 JavaScript 查看旅行地图。</div></noscript>
 </body>

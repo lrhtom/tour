@@ -1,1 +1,150 @@
-export default [{"id":"wikidata:Q2300919","sourceIds":{"wikidata":"Q2300919"},"nameEn":"The Fat Duck","nameZh":"肥鸭餐厅 The Fat Duck","aliases":["肥鸭餐厅 The Fat Duck","The Fat Duck"],"category":"restaurant","city":"bray","nation":"England","position":{"lat":51.50793,"lng":-0.701764,"kind":"source-point","source":"https://www.wikidata.org/wiki/Q2300919","precisionDegrees":0.000001},"entrance":null,"website":"https://thefatduck.co.uk/","address":"High Street, Bray SL6 2AQ","googlePlaceId":null,"sourceUrls":["https://www.wikidata.org/wiki/Q2300919","https://en.wikipedia.org/wiki/The_Fat_Duck","https://thefatduck.co.uk/discover-more"],"sourceUpdatedAt":null,"verifiedAt":"2026-11-09","qualityFlags":["entrance-unverified"],"highlight":"创意品鉴菜单","curation":{"list":"bucket-list","basis":"editorial-selection","checkedAt":"2026-11-09","sources":["https://thefatduck.co.uk/discover-more"]}},{"id":"wikidata:Q7773745","sourceIds":{"wikidata":"Q7773745"},"nameEn":"The Waterside Inn","nameZh":"水边餐厅 The Waterside Inn","aliases":["水边餐厅 The Waterside Inn","The Waterside Inn"],"category":"restaurant","city":"bray","nation":"England","position":{"lat":51.5092,"lng":-0.699,"kind":"source-point","source":"https://www.wikidata.org/wiki/Q7773745","precisionDegrees":0.0001},"entrance":null,"website":"https://www.waterside-inn.co.uk/","address":"Ferry Road, Bray SL6 2AT","googlePlaceId":null,"sourceUrls":["https://www.wikidata.org/wiki/Q7773745","https://en.wikipedia.org/wiki/The_Waterside_Inn"],"sourceUpdatedAt":null,"verifiedAt":"2026-11-09","qualityFlags":["entrance-unverified"],"highlight":"泰晤士河畔法式料理","curation":{"list":"bucket-list","basis":"editorial-selection","checkedAt":"2026-11-09","sources":["https://www.waterside-inn.co.uk/"]}},{"id":"wikidata:Q7738706","sourceIds":{"wikidata":"Q7738706"},"nameEn":"The Hand & Flowers","nameZh":"The Hand & Flowers","aliases":["The Hand & Flowers"],"category":"restaurant","city":"marlow","nation":"England","position":{"lat":51.569893,"lng":-0.783169,"kind":"source-point","source":"https://www.wikidata.org/wiki/Q7738706","precisionDegrees":0.000001},"entrance":null,"website":"https://www.thehandandflowers.co.uk/","address":"126 West Street, Marlow SL7 2BP","googlePlaceId":null,"sourceUrls":["https://www.wikidata.org/wiki/Q7738706","https://en.wikipedia.org/wiki/The_Hand_%26_Flowers"],"sourceUpdatedAt":null,"verifiedAt":"2026-11-09","qualityFlags":["entrance-unverified"],"highlight":"英式美食酒馆","curation":{"list":"bucket-list","basis":"editorial-selection","checkedAt":"2026-11-09","sources":["https://www.thehandandflowers.co.uk/"]}}];
+export default [
+  {
+    "id": "wikidata:Q2300919",
+    "sourceIds": {
+      "wikidata": "Q2300919"
+    },
+    "nameEn": "The Fat Duck",
+    "nameZh": "肥鸭餐厅 The Fat Duck",
+    "aliases": [
+      "肥鸭餐厅 The Fat Duck",
+      "The Fat Duck"
+    ],
+    "category": "restaurant",
+    "city": "bray",
+    "nation": "England",
+    "position": {
+      "lat": 51.50793,
+      "lng": -0.701764,
+      "kind": "source-point",
+      "source": "https://www.wikidata.org/wiki/Q2300919",
+      "precisionDegrees": 1e-06
+    },
+    "entrance": null,
+    "website": "https://thefatduck.co.uk/",
+    "address": "High Street, Bray SL6 2AQ",
+    "googlePlaceId": null,
+    "sourceUrls": [
+      "https://www.wikidata.org/wiki/Q2300919",
+      "https://en.wikipedia.org/wiki/The_Fat_Duck",
+      "https://thefatduck.co.uk/discover-more"
+    ],
+    "sourceUpdatedAt": null,
+    "verifiedAt": "2026-11-09",
+    "qualityFlags": [
+      "entrance-unverified"
+    ],
+    "highlight": "创意品鉴菜单",
+    "curation": {
+      "list": "bucket-list",
+      "basis": "editorial-selection",
+      "checkedAt": "2026-11-09",
+      "sources": [
+        "https://thefatduck.co.uk/discover-more"
+      ]
+    },
+    "dining": {
+      "cuisines": [
+        "modern",
+        "british"
+      ]
+    }
+  },
+  {
+    "id": "wikidata:Q7773745",
+    "sourceIds": {
+      "wikidata": "Q7773745"
+    },
+    "nameEn": "The Waterside Inn",
+    "nameZh": "水边餐厅 The Waterside Inn",
+    "aliases": [
+      "水边餐厅 The Waterside Inn",
+      "The Waterside Inn"
+    ],
+    "category": "restaurant",
+    "city": "bray",
+    "nation": "England",
+    "position": {
+      "lat": 51.5092,
+      "lng": -0.699,
+      "kind": "source-point",
+      "source": "https://www.wikidata.org/wiki/Q7773745",
+      "precisionDegrees": 0.0001
+    },
+    "entrance": null,
+    "website": "https://www.waterside-inn.co.uk/",
+    "address": "Ferry Road, Bray SL6 2AT",
+    "googlePlaceId": null,
+    "sourceUrls": [
+      "https://www.wikidata.org/wiki/Q7773745",
+      "https://en.wikipedia.org/wiki/The_Waterside_Inn"
+    ],
+    "sourceUpdatedAt": null,
+    "verifiedAt": "2026-11-09",
+    "qualityFlags": [
+      "entrance-unverified"
+    ],
+    "highlight": "泰晤士河畔法式料理",
+    "curation": {
+      "list": "bucket-list",
+      "basis": "editorial-selection",
+      "checkedAt": "2026-11-09",
+      "sources": [
+        "https://www.waterside-inn.co.uk/"
+      ]
+    },
+    "dining": {
+      "cuisines": [
+        "french"
+      ]
+    }
+  },
+  {
+    "id": "wikidata:Q7738706",
+    "sourceIds": {
+      "wikidata": "Q7738706"
+    },
+    "nameEn": "The Hand & Flowers",
+    "nameZh": "The Hand & Flowers",
+    "aliases": [
+      "The Hand & Flowers"
+    ],
+    "category": "restaurant",
+    "city": "marlow",
+    "nation": "England",
+    "position": {
+      "lat": 51.569893,
+      "lng": -0.783169,
+      "kind": "source-point",
+      "source": "https://www.wikidata.org/wiki/Q7738706",
+      "precisionDegrees": 1e-06
+    },
+    "entrance": null,
+    "website": "https://www.thehandandflowers.co.uk/",
+    "address": "126 West Street, Marlow SL7 2BP",
+    "googlePlaceId": null,
+    "sourceUrls": [
+      "https://www.wikidata.org/wiki/Q7738706",
+      "https://en.wikipedia.org/wiki/The_Hand_%26_Flowers"
+    ],
+    "sourceUpdatedAt": null,
+    "verifiedAt": "2026-11-09",
+    "qualityFlags": [
+      "entrance-unverified"
+    ],
+    "highlight": "英式美食酒馆",
+    "curation": {
+      "list": "bucket-list",
+      "basis": "editorial-selection",
+      "checkedAt": "2026-11-09",
+      "sources": [
+        "https://www.thehandandflowers.co.uk/"
+      ]
+    },
+    "dining": {
+      "cuisines": [
+        "british"
+      ]
+    }
+  }
+];
