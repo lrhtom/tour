@@ -1,0 +1,1 @@
+export default {"count":87,"restaurants":18,"districts":18,"withWebsite":69,"entranceVerified":0,"checkedAt":"2026-11-09","selection":"Editorial shortlist; restaurant status and menus should be checked with the venue."};

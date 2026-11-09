@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="在地图上发现英国景点、餐厅与知名街区。搜索、收藏，出发。">
+  <title>行迹 · 英国旅行地图</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2040%2048%22%3E%3Cpath%20fill%3D%22%231a73e8%22%20d%3D%22M20%200A20%2020%200%200%200%200%2020c0%2012%2020%2028%2020%2028s20-16%2020-28A20%2020%200%200%200%2020%200Z%22%2F%3E%3Ccircle%20cx%3D%2220%22%20cy%3D%2219%22%20r%3D%227%22%20fill%3D%22%23fff%22%2F%3E%3C%2Fsvg%3E%0A" type="image/svg+xml">
+  <link rel="stylesheet" href="./vendor/maplibre/maplibre-gl.css">
+  <link rel="stylesheet" href="./css/style.css">
+  <script defer src="./js/boot.js"></script>
+<!--
+# Data and map credits
+
+Attraction facts in the initial dataset are from [Wikidata](https://www.wikidata.org/wiki/Wikidata:Licensing), released under CC0. Entity links and collection coverage are recorded in `data/index.json`, `data/report.json` and each attraction record. This is a starter selection, not a full national inventory.
+
+The bundled map is a regional extract of [Protomaps Basemap](https://docs.protomaps.com/basemaps/downloads), derived from OpenStreetMap and Natural Earth, distributed by Protomaps as an ODbL Produced Work. © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright). Map provenance is in `maps/manifest.json`. Preserve visible map attribution. No tiles were scraped from OSM's public tile service.
+
+If collecting OSM attraction data, the resulting OSM-derived database is subject to the [Open Database License](https://opendatacommons.org/licenses/odbl/1-0/). Distribute its appropriate attribution, source and license along with exported files; keep independently licensed data provenance.
+
+MapLibre GL JS and PMTiles use BSD licenses; included copies are under `vendor/`. The Protomaps style license is in `maps/STYLE-LICENSE.txt`. The map's Noto Sans glyph data uses the SIL Open Font License in `maps/fonts/OFL.txt`. The interface uses the visitor's ordinary installed fonts; no online font service is loaded.
+
+-->
+</head>
+<body>
+  <nav class="rail" aria-label="主导航">
+    <a class="brand" href="./" aria-label="行迹首页"><svg viewBox="0 0 32 40" aria-hidden="true"><path fill="#1a73e8" d="M16 0A16 16 0 0 0 0 16c0 11 16 24 16 24s16-13 16-24A16 16 0 0 0 16 0Z"/><circle cx="16" cy="15" r="6" fill="white"/></svg></a>
+    <button class="rail-item active" id="nav-explore" aria-label="探索景点" aria-pressed="true"><span data-icon="compass"></span><span>探索</span></button>
+    <button class="rail-item" id="nav-saved" aria-label="查看收藏" aria-pressed="false"><span data-icon="bookmark"></span><span>收藏</span><span class="saved-count" id="saved-count" hidden></span></button>
+    <div class="rail-spacer"></div>
+    <button class="rail-item" id="about-button" aria-label="数据来源"><span data-icon="info"></span></button>
+  </nav>
+
+  <main id="map" aria-label="英国景点地图"></main>
+
+  <aside class="sidebar" id="sidebar" aria-label="景点列表">
+    <button class="sheet-handle" id="sheet-handle" aria-label="展开或收起景点列表"><span></span></button>
+    <header class="sidebar-top">
+      <form class="search-box" id="search-form" role="search">
+        <span class="search-icon" data-icon="search"></span>
+        <input id="search" type="search" placeholder="搜索地点、餐厅" aria-label="搜索地点、餐厅或城市" autocomplete="off" spellcheck="false">
+        <button class="icon-button mobile-saved" id="mobile-saved" type="button" aria-label="查看收藏" aria-pressed="false"><span data-icon="bookmark"></span></button>
+        <button class="icon-button clear-search" id="clear-search" type="button" aria-label="清除搜索" hidden><span data-icon="close"></span></button>
+        <button class="search-submit icon-button" type="submit" aria-label="搜索"><span data-icon="arrow-right"></span></button>
+      </form>
+      <div class="location-row">
+        <label class="city-select"><span data-icon="pin"></span><select id="city" aria-label="选择目的地城市"></select><span class="select-chevron" data-icon="chevron-down"></span></label>
+        <button class="locate-text" id="locate-inline"><span data-icon="locate"></span>我的位置</button>
+      </div>
+    </header>
+    <div class="results-heading" id="results-heading">
+      <div><h1 id="results-title">探索伦敦</h1><p id="results-meta" aria-live="polite">正在加载景点…</p></div>
+      <label class="radius-select"><select id="radius" aria-label="搜索半径"><option value="2">2 km</option><option value="5">5 km</option><option value="10">10 km</option><option value="25" selected>25 km</option><option value="50">50 km</option></select><span data-icon="chevron-down"></span></label>
+    </div>
+    <div class="results-list" id="results" aria-label="景点搜索结果" aria-busy="true"></div>
+    <section class="detail" id="detail" aria-label="景点详情" hidden></section>
+    <footer class="sidebar-footer"><span class="status-dot"></span><span id="coverage-label">首批收录</span><span class="footer-divider">·</span><button id="data-button">数据来源</button></footer>
+  </aside>
+
+  <div class="category-bar" id="categories" aria-label="景点分类"></div>
+  <button class="search-area floating-button" id="search-area" hidden><span data-icon="refresh"></span>搜索此区域</button>
+  <div class="map-message" id="map-message" role="status"><span class="spinner"></span>地图加载中</div>
+
+  <div class="map-controls">
+    <button class="map-control location-control" id="locate" aria-label="定位到我的位置" title="我的位置"><span data-icon="locate"></span></button>
+    <div class="zoom-controls"><button class="map-control" id="zoom-in" aria-label="放大地图" title="放大"><span data-icon="plus"></span></button><button class="map-control" id="zoom-out" aria-label="缩小地图" title="缩小"><span data-icon="minus"></span></button></div>
+    <button class="map-control" id="reset-north" aria-label="地图朝北" title="朝北"><span data-icon="navigation"></span></button>
+  </div>
+  <div class="layers-wrap">
+    <button class="layers-button" id="layers-button" aria-expanded="false"><span data-icon="layers"></span><span>图层</span></button>
+    <div class="layers-popover" id="layers-popover" hidden><strong>地图显示</strong><label><input type="checkbox" id="show-labels" checked>地名</label><label><input type="checkbox" id="show-places" checked>景点</label></div>
+  </div>
+  <button class="mobile-view floating-button" id="mobile-view"><span data-icon="map"></span><span id="mobile-view-label">地图</span></button>
+  <div class="toast" id="toast" role="status" hidden></div>
+
+  <dialog id="about-dialog" class="about-dialog">
+    <div class="dialog-heading"><h2>关于行迹</h2><button class="icon-button" id="close-about" aria-label="关闭"><span data-icon="close"></span></button></div>
+    <p>发现英国，慢慢走。</p>
+    <dl id="dataset-info"></dl>
+    <p class="fine-print">景点位置与入口可能不同，出发前请核对官网。</p>
+    <div class="source-links"><a href="https://www.wikidata.org/wiki/Wikidata:Licensing" target="_blank" rel="noopener noreferrer">Wikidata · CC0</a><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap · ODbL</a><a href="https://protomaps.com" target="_blank" rel="noopener noreferrer">Protomaps</a></div>
+  </dialog>
+  <noscript><div class="noscript">请启用 JavaScript 查看旅行地图。</div></noscript>
+</body>
+</html>
