@@ -79,7 +79,7 @@ export class TravelMap {
     const lngs = places.map(p => p.position.lng), lats = places.map(p => p.position.lat);
     const padding = this.map.getPadding();
     this.map.fitBounds([[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]], {
-      padding: { top: padding.top + (padding.top ? 16 : 75), bottom: padding.bottom + 30, left: 35, right: 35 },
+      padding: { top: padding.top + (padding.top ? 60 : 110), bottom: padding.bottom + 30, left: 35, right: 35 },
       maxZoom: 14, duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 500, retainPadding: false,
     });
   }

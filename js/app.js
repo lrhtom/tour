@@ -5,7 +5,7 @@ import { TravelMap } from './map.js';
 
 const $ = id => document.getElementById(id);
 const node = (tag, className = '', text) => { const el = document.createElement(tag); el.className = className; if (text !== undefined) el.textContent = text; return el; };
-const state = { city: CITIES[0], center: CITIES[0], radius: 25, category: 'all', cuisine: 'all', buffetOnly: false, universityNationwide: true, universities: [], query: '', mode: 'explore', places: [], results: [], selected: null, saved: new Map(), loadId: 0, lockUntil: 0 };
+const state = { city: CITIES[0], center: CITIES[0], radius: 25, category: 'all', cuisine: 'all', buffetOnly: false, universityNationwide: true, universityQsOnly: false, universities: [], query: '', mode: 'explore', places: [], results: [], selected: null, saved: new Map(), loadId: 0, lockUntil: 0 };
 try { for (const p of JSON.parse(localStorage.getItem('uk-nearby-saved-v1') || '[]')) if (p?.id && p?.position && Number.isFinite(p.position.lat) && Number.isFinite(p.position.lng) && p.nameEn) state.saved.set(p.id, p); } catch {}
 const store = new PlacesStore();
 let toastTimer, searchTimer;
@@ -29,11 +29,12 @@ async function loadUniversities() {
   })().catch(error => { universitiesTask = null; throw error; });
   return universitiesTask;
 }
-for (const button of $('university-filters').querySelectorAll('button')) button.addEventListener('click', async () => {
+for (const button of $('university-filters').querySelectorAll('[data-university-scope]')) button.addEventListener('click', async () => {
   state.universityNationwide = button.dataset.universityScope === 'uk'; closeDetail();
   if (state.universityNationwide) { try { await loadUniversities(); } catch { toast('大学数据暂时无法加载，请重试'); } }
   render(); fitFilteredPlaces();
 });
+$('university-qs').addEventListener('click', () => { state.universityQsOnly = !state.universityQsOnly; closeDetail(); render(); fitFilteredPlaces(); });
 $('cuisine').addEventListener('change', () => { state.cuisine = $('cuisine').value; closeDetail(); render(); fitFilteredPlaces(); });
 $('buffet-filter').addEventListener('click', () => { state.buffetOnly = !state.buffetOnly; closeDetail(); render(); fitFilteredPlaces(); });
 for (const [key, category] of Object.entries(CATEGORIES)) {
@@ -118,7 +119,8 @@ function makeCard(place) {
 }
 function render() {
   const nationwide = state.mode !== 'saved' && state.category === 'university' && state.universityNationwide;
-  const source = state.mode === 'saved' ? [...state.saved.values()] : nationwide ? state.universities : state.places;
+  let source = state.mode === 'saved' ? [...state.saved.values()] : nationwide ? state.universities : state.places;
+  if (state.category === 'university' && state.universityQsOnly) source = source.filter(place => place.ranking?.provider === 'QS' && place.ranking.globalRank <= 600);
   const wholeCity = !nationwide && state.mode !== 'saved' && state.radius === 'all' && state.city;
   state.results = searchPlaces(source, { center: state.center, radius: state.mode === 'saved' || wholeCity || nationwide ? Infinity : Number(state.radius), cityId: wholeCity ? state.city.id : null, query: state.query, category: state.category, cuisine: state.cuisine, buffetOnly: state.buffetOnly });
   $('dining-filters').hidden = state.category !== 'restaurant' || Boolean(state.selected);
@@ -126,12 +128,15 @@ function render() {
   $('buffet-filter').classList.toggle('active', state.buffetOnly);
   $('buffet-filter').setAttribute('aria-pressed', String(state.buffetOnly));
   $('university-filters').hidden = state.category !== 'university' || state.mode === 'saved' || Boolean(state.selected);
-  $('university-filters').querySelectorAll('button').forEach(button => {
+  $('university-filters').querySelectorAll('[data-university-scope]').forEach(button => {
     const active = (button.dataset.universityScope === 'uk') === state.universityNationwide;
     button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active));
   });
+  $('university-qs').classList.toggle('active', state.universityQsOnly);
+  $('university-qs').setAttribute('aria-pressed', String(state.universityQsOnly));
   $('results-title').textContent = state.mode === 'saved' ? '我的收藏' : nationwide ? '英国大学' : state.city ? `探索${state.city.name}` : '探索附近';
-  $('results-meta').textContent = nationwide ? `${state.results.length} 所大学 · 按距离排序` : `${state.results.length} 个地点 · 按距离排序`;
+  const institutions = new Set(state.results.map(place => place.university?.institutionId || place.id));
+  $('results-meta').textContent = state.category === 'university' ? `${institutions.size} 所学校 · ${state.results.length} 个位置` : `${state.results.length} 个地点 · 按距离排序`;
   $('radius').disabled = state.mode === 'saved';
   $('radius').closest('.radius-select').hidden = nationwide;
   $('radius').querySelector('[value="all"]').disabled = !state.city;
@@ -163,9 +168,10 @@ function renderDetail(place) {
   if (place.highlight && place.category !== 'university') body.append(detailRow(category.icon, place.highlight));
   const rankUrl = safeUrl(place.ranking?.sourceUrl);
   if (place.category === 'university' && rankUrl) {
-    const link = node('a', '', `QS ${place.ranking.edition} · #${place.ranking.rankDisplay}`); link.href = rankUrl; link.target = '_blank'; link.rel = 'noopener noreferrer';
+    const link = node('a', '', `QS ${place.ranking.edition} · #${place.ranking.rankDisplay}（学校整体）`); link.href = rankUrl; link.target = '_blank'; link.rel = 'noopener noreferrer';
     body.append(detailRow('university', link));
   }
+  if (place.university?.campusName) body.append(detailRow('university', place.university.campusName));
   if (isVerifiedBuffet(place)) {
     const proof = place.dining.buffetVerification;
     const link = node('a', '', '自助餐 · 官网已核验'); link.href = safeUrl(proof.sourceUrl); link.target = '_blank'; link.rel = 'noopener noreferrer';
