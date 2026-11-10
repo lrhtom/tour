@@ -21,17 +21,18 @@ export default [
       "precisionDegrees": 0.0002777777777777778
     },
     "entrance": null,
-    "website": "http://www.stir.ac.uk",
+    "website": "https://www.stir.ac.uk",
     "address": "University of Stirling, Stirling",
     "googlePlaceId": null,
     "sourceUrls": [
       "https://www.wikidata.org/wiki/Q963530",
+      "https://www.stir.ac.uk",
+      "https://en.wikipedia.org/wiki/University_of_Stirling",
       "https://www.topuniversities.com/universities/university-stirling",
-      "http://www.stir.ac.uk",
-      "https://en.wikipedia.org/wiki/University_of_Stirling"
+      "http://www.stir.ac.uk"
     ],
     "sourceUpdatedAt": "2026-10-11T16:06:46Z",
-    "verifiedAt": "2026-11-09",
+    "verifiedAt": "2026-11-10",
     "qualityFlags": [
       "entrance-unverified",
       "campus-reference"
@@ -47,8 +48,15 @@ export default [
       "checkedAt": "2026-11-09"
     },
     "highlight": "QS 2027 · #=560",
-    "visitNote": "校区参考位置；参观开放请查看学校官网。",
-    "visitInfoUrl": "http://www.stir.ac.uk",
-    "visitCheckedAt": "2026-11-09"
+    "visitNote": "学校参考位置；校区开放与参观安排请查看官网。",
+    "visitInfoUrl": "https://www.stir.ac.uk",
+    "visitCheckedAt": "2026-11-10",
+    "university": {
+      "institutionId": "wikidata:Q963530",
+      "institutionNameEn": "University of Stirling",
+      "campusNameEn": "",
+      "campusType": "reference",
+      "institutionType": "university"
+    }
   }
 ];

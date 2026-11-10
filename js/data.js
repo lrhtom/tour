@@ -1,8 +1,11 @@
-import { searchBounds, intersects } from './core.js';
+import { searchBounds, intersects } from './core.js?v=20261110-nature-8';
 export class PlacesStore {
   constructor() { this.cache = new Map(); this.index = null; }
   async init() {
-    const { default: index } = await import(new URL('../data/index.js', import.meta.url));
+    const indexUrl = new URL('../data/index.js', import.meta.url);
+    indexUrl.search = new URL(import.meta.url).search;
+    indexUrl.searchParams.set('fresh', Math.floor(Date.now() / 60000));
+    const { default: index } = await import(indexUrl);
     this.index = index;
     return this.index;
   }
@@ -22,7 +25,9 @@ export class PlacesStore {
     for (let i = 0; i < shards.length; i += 6) {
       batches.push(...await Promise.all(shards.slice(i, i + 6).map(async shard => {
         if (!this.cache.has(shard.file)) {
-          const promise = import(new URL(`../data/${shard.file}`, import.meta.url)).then(module => module.default);
+          const shardUrl = new URL(`../data/${shard.file}`, import.meta.url);
+          shardUrl.searchParams.set('v', this.index.revision);
+          const promise = import(shardUrl).then(module => module.default);
           this.cache.set(shard.file, promise);
           promise.catch(() => this.cache.delete(shard.file));
         }

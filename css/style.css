@@ -1,7 +1,14 @@
 :root{font-family:Arial,"Microsoft YaHei",system-ui,sans-serif;color:#202124;background:#f5f4f0;font-synthesis:none;--blue:#1a73e8;--muted:#70757a;--line:#e8eaed;--rail:72px;--sidebar:360px;--shadow:0 2px 7px #3c404326;--radius:12px}
 .dining-filters{display:flex;align-items:center;gap:8px;padding:0 22px 15px;flex-shrink:0}
 .university-filters{display:flex;align-items:center;gap:8px;padding:0 22px 15px;flex-shrink:0}
-.university-filters>span{font-size:11px;color:#70757a;margin-left:2px;white-space:nowrap}
+.nature-filters{display:flex;align-items:center;gap:8px;padding:0 22px 15px;flex-shrink:0}
+.nature-filters .cuisine-select{min-width:0;flex:1}
+@media(max-width:760px){.nature-filters{padding:0 20px 12px}.sidebar.collapsed .nature-filters{display:none!important}}
+.qs-limit{display:flex;align-items:center;gap:5px;height:33px;padding:0 11px;border:1px solid #dadce0;border-radius:18px;color:#5f6368;font-size:12px;white-space:nowrap}
+.qs-limit input{width:53px;border:0;outline:0;background:transparent;color:#202124;font:inherit;appearance:textfield;-moz-appearance:textfield}
+.qs-limit input::-webkit-inner-spin-button,.qs-limit input::-webkit-outer-spin-button{appearance:none;margin:0}
+.qs-limit:focus-within{outline:2px solid #1a73e8;outline-offset:2px}
+.qs-limit:has(input:invalid){border-color:#b3261e}
 .cuisine-select{position:relative;display:flex;align-items:center;max-width:180px}
 .cuisine-select select,.dining-chip{height:33px;border:1px solid #dadce0;border-radius:18px;background:#fff;color:#5f6368;font:inherit;font-size:12px}
 .cuisine-select select{width:100%;appearance:none;padding:0 31px 0 13px;cursor:pointer}

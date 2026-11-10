@@ -1,8 +1,8 @@
 import * as ML from '../vendor/maplibre/maplibre-gl.js';
 import { PMTiles, Protocol } from '../vendor/pmtiles.js';
-import { ChunkedArchiveSource } from './archive.js';
-import { CATEGORIES, formatDistance, placeTypeLabel } from './core.js';
-import { readStaticAsset } from './static-assets.js';
+import { ChunkedArchiveSource } from './archive.js?v=20261110-nature-8';
+import { CATEGORIES, formatDistance, placeTypeLabel } from './core.js?v=20261110-nature-8';
+import { readStaticAsset } from './static-assets.js?v=20261110-nature-8';
 
 function pinImage(color) {
   const canvas = document.createElement('canvas');
@@ -35,7 +35,7 @@ export class TravelMap {
     style.glyphs = `localasset://local${mapRoot.pathname}fonts/{fontstack}/{range}.pbf`;
     style.sprite = `localasset://local${mapRoot.pathname}sprites/light`;
     this.map = new ML.Map({ container: 'map', style, center: [city.lng, city.lat], zoom: city.zoom,
-      minZoom: 4, maxZoom: 18, maxBounds: [[-11, 48.5], [4, 62.5]], attributionControl: false,
+      minZoom: 2, maxZoom: 18, maxBounds: [[-35, 20], [30, 78]], attributionControl: false,
       dragRotate: false, pitchWithRotate: false, touchPitch: false, renderWorldCopies: false,
       localIdeographFontFamily: 'Arial, Microsoft YaHei, sans-serif', fadeDuration: 150,
     });
@@ -79,7 +79,8 @@ export class TravelMap {
     const lngs = places.map(p => p.position.lng), lats = places.map(p => p.position.lat);
     const padding = this.map.getPadding();
     this.map.fitBounds([[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]], {
-      padding: { top: padding.top + (padding.top ? 60 : 110), bottom: padding.bottom + 30, left: 35, right: 35 },
+      // MapLibre adds fit padding to the existing header/sheet padding.
+      padding: { top: padding.top ? 60 : 110, bottom: 30, left: 35, right: 35 },
       maxZoom: 14, duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 500, retainPadding: false,
     });
   }

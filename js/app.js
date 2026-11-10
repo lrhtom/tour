@@ -1,11 +1,11 @@
-import { CITIES, CATEGORIES, CUISINES, searchPlaces, formatDistance, googleSearch, googleDirections, distanceKm, safeUrl, isVerifiedBuffet, cuisineLabel, placeTypeLabel } from './core.js';
-import { icon, mountIcons } from './icons.js';
-import { PlacesStore } from './data.js';
-import { TravelMap } from './map.js';
+import { CITIES, CATEGORIES, CUISINES, NATURE_TYPES, searchPlaces, formatDistance, googleSearch, googleDirections, distanceKm, safeUrl, isVerifiedBuffet, isBrandBuffet, hasBuffetService, cuisineLabel, placeTypeLabel } from './core.js?v=20261110-nature-8';
+import { icon, mountIcons } from './icons.js?v=20261110-nature-8';
+import { PlacesStore } from './data.js?v=20261110-nature-8';
+import { TravelMap } from './map.js?v=20261110-nature-8';
 
 const $ = id => document.getElementById(id);
 const node = (tag, className = '', text) => { const el = document.createElement(tag); el.className = className; if (text !== undefined) el.textContent = text; return el; };
-const state = { city: CITIES[0], center: CITIES[0], radius: 25, category: 'all', cuisine: 'all', buffetOnly: false, universityNationwide: true, universityQsOnly: false, universities: [], query: '', mode: 'explore', places: [], results: [], selected: null, saved: new Map(), loadId: 0, lockUntil: 0 };
+const state = { city: CITIES[0], center: CITIES[0], radius: 25, category: 'all', cuisine: 'all', buffetOnly: false, universityNationwide: true, universityQsLimit: null, universities: [], natureNationwide: false, natureKind: 'all', naturePlaces: [], query: '', mode: 'explore', places: [], results: [], selected: null, saved: new Map(), loadId: 0, lockUntil: 0 };
 try { for (const p of JSON.parse(localStorage.getItem('uk-nearby-saved-v1') || '[]')) if (p?.id && p?.position && Number.isFinite(p.position.lat) && Number.isFinite(p.position.lng) && p.nameEn) state.saved.set(p.id, p); } catch {}
 const store = new PlacesStore();
 let toastTimer, searchTimer;
@@ -20,6 +20,7 @@ mountIcons();
 for (const city of CITIES) { const option = node('option', '', city.name); option.value = city.id; $('city').append(option); }
 const customCenterOption = node('option', '', '地图选点'); customCenterOption.value = 'custom'; customCenterOption.disabled = true; customCenterOption.hidden = true; $('city').append(customCenterOption);
 for (const [key, label] of Object.entries(CUISINES)) { const option = node('option', '', label); option.value = key; $('cuisine').append(option); }
+for (const [key, label] of Object.entries(NATURE_TYPES)) { const option = node('option', '', label); option.value = key; $('nature-type').append(option); }
 function fitFilteredPlaces() { state.lockUntil = Date.now() + 1200; map.fitPlaces(state.results); }
 let universitiesTask;
 async function loadUniversities() {
@@ -29,12 +30,33 @@ async function loadUniversities() {
   })().catch(error => { universitiesTask = null; throw error; });
   return universitiesTask;
 }
+let natureTask;
+async function loadNature() {
+  if (!natureTask) natureTask = (async () => {
+    if (!store.index) await store.init();
+    state.naturePlaces = (await store.all()).filter(place => place.category === 'nature');
+  })().catch(error => { natureTask = null; throw error; });
+  return natureTask;
+}
+for (const button of $('nature-filters').querySelectorAll('[data-nature-scope]')) button.addEventListener('click', async () => {
+  state.natureNationwide = button.dataset.natureScope === 'uk'; closeDetail();
+  if (state.natureNationwide) {
+    skeleton();
+    try { await loadNature(); } catch { toast('自然景点暂时无法加载，请重试'); }
+  }
+  render(); fitFilteredPlaces();
+});
+$('nature-type').addEventListener('change', () => { state.natureKind = $('nature-type').value; closeDetail(); render(); fitFilteredPlaces(); });
 for (const button of $('university-filters').querySelectorAll('[data-university-scope]')) button.addEventListener('click', async () => {
   state.universityNationwide = button.dataset.universityScope === 'uk'; closeDetail();
   if (state.universityNationwide) { try { await loadUniversities(); } catch { toast('大学数据暂时无法加载，请重试'); } }
   render(); fitFilteredPlaces();
 });
-$('university-qs').addEventListener('click', () => { state.universityQsOnly = !state.universityQsOnly; closeDetail(); render(); fitFilteredPlaces(); });
+$('university-qs').addEventListener('input', () => {
+  const input = $('university-qs'), value = input.value === '' ? null : Number(input.value);
+  if (!input.validity.valid || (value !== null && !Number.isSafeInteger(value))) return;
+  state.universityQsLimit = value; closeDetail(); render(); fitFilteredPlaces();
+});
 $('cuisine').addEventListener('change', () => { state.cuisine = $('cuisine').value; closeDetail(); render(); fitFilteredPlaces(); });
 $('buffet-filter').addEventListener('click', () => { state.buffetOnly = !state.buffetOnly; closeDetail(); render(); fitFilteredPlaces(); });
 for (const [key, category] of Object.entries(CATEGORIES)) {
@@ -49,6 +71,10 @@ for (const [key, category] of Object.entries(CATEGORIES)) {
     if (key === 'university') {
       skeleton();
       try { await loadUniversities(); } catch { toast('大学数据暂时无法加载，请重试'); }
+    }
+    if (key === 'nature' && state.natureNationwide) {
+      skeleton();
+      try { await loadNature(); } catch { toast('自然景点暂时无法加载，请重试'); }
     }
     render();
     if (state.category === key && key !== 'all') fitFilteredPlaces();
@@ -118,11 +144,13 @@ function makeCard(place) {
   return card;
 }
 function render() {
-  const nationwide = state.mode !== 'saved' && state.category === 'university' && state.universityNationwide;
-  let source = state.mode === 'saved' ? [...state.saved.values()] : nationwide ? state.universities : state.places;
-  if (state.category === 'university' && state.universityQsOnly) source = source.filter(place => place.ranking?.provider === 'QS' && place.ranking.globalRank <= 600);
+  const allUniversities = state.mode !== 'saved' && state.category === 'university' && state.universityNationwide;
+  const allNature = state.mode !== 'saved' && state.category === 'nature' && state.natureNationwide;
+  const nationwide = allUniversities || allNature;
+  let source = state.mode === 'saved' ? [...state.saved.values()] : allUniversities ? state.universities : allNature ? state.naturePlaces : state.places;
+  if (state.category === 'university' && state.universityQsLimit !== null) source = source.filter(place => place.ranking?.provider === 'QS' && place.ranking.rankMax !== null && (place.ranking.rankMax ?? place.ranking.globalRank) <= state.universityQsLimit);
   const wholeCity = !nationwide && state.mode !== 'saved' && state.radius === 'all' && state.city;
-  state.results = searchPlaces(source, { center: state.center, radius: state.mode === 'saved' || wholeCity || nationwide ? Infinity : Number(state.radius), cityId: wholeCity ? state.city.id : null, query: state.query, category: state.category, cuisine: state.cuisine, buffetOnly: state.buffetOnly });
+  state.results = searchPlaces(source, { center: state.center, radius: state.mode === 'saved' || wholeCity || nationwide ? Infinity : Number(state.radius), cityId: wholeCity ? state.city.id : null, query: state.query, category: state.category, cuisine: state.cuisine, buffetOnly: state.buffetOnly, natureKind: state.natureKind });
   $('dining-filters').hidden = state.category !== 'restaurant' || Boolean(state.selected);
   $('cuisine').value = state.cuisine;
   $('buffet-filter').classList.toggle('active', state.buffetOnly);
@@ -132,9 +160,13 @@ function render() {
     const active = (button.dataset.universityScope === 'uk') === state.universityNationwide;
     button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active));
   });
-  $('university-qs').classList.toggle('active', state.universityQsOnly);
-  $('university-qs').setAttribute('aria-pressed', String(state.universityQsOnly));
-  $('results-title').textContent = state.mode === 'saved' ? '我的收藏' : nationwide ? '英国大学' : state.city ? `探索${state.city.name}` : '探索附近';
+  $('nature-filters').hidden = state.category !== 'nature' || state.mode === 'saved' || Boolean(state.selected);
+  $('nature-type').value = state.natureKind;
+  $('nature-filters').querySelectorAll('[data-nature-scope]').forEach(button => {
+    const active = (button.dataset.natureScope === 'uk') === state.natureNationwide;
+    button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active));
+  });
+  $('results-title').textContent = state.mode === 'saved' ? '我的收藏' : allUniversities ? '英国大学' : allNature ? '英国自然' : state.city ? `探索${state.city.name}` : '探索附近';
   const institutions = new Set(state.results.map(place => place.university?.institutionId || place.id));
   $('results-meta').textContent = state.category === 'university' ? `${institutions.size} 所学校 · ${state.results.length} 个位置` : `${state.results.length} 个地点 · 按距离排序`;
   $('radius').disabled = state.mode === 'saved';
@@ -159,7 +191,9 @@ function renderDetail(place) {
   const cover = node('div', 'detail-cover'); cover.style.setProperty('--place-color', category.color); cover.style.setProperty('--place-tint', `${category.color}0e`); cover.append(icon(category.icon));
   const body = node('div', 'detail-body'); body.append(node('h2', '', place.nameZh || place.nameEn));
   if (place.nameZh) body.append(node('p', 'detail-en', place.nameEn));
-  const typeLabel = [place.category === 'university' ? '大学' : placeTypeLabel(place), isVerifiedBuffet(place) ? cuisineLabel(place) : null].filter(Boolean).join(' · ');
+  const placeType = placeTypeLabel(place);
+  const universityType = placeType.startsWith('QS') || placeType === '大学' ? '大学' : `大学 · ${placeType}`;
+  const typeLabel = [place.category === 'university' ? universityType : placeType, hasBuffetService(place) ? cuisineLabel(place) : null].filter(Boolean).join(' · ');
   body.append(node('p', 'detail-category', `${typeLabel} · ${formatDistance(place.distance || 0)}`));
   const actions = node('div', 'detail-actions');
   const save = node('button', 'detail-action'); const saved = state.saved.has(place.id); save.append(icon(saved ? 'bookmark-filled' : 'bookmark'), node('span', '', saved ? '已收藏' : '收藏')); save.addEventListener('click', () => toggleSaved(place)); save.setAttribute('aria-pressed', String(saved));
@@ -171,12 +205,23 @@ function renderDetail(place) {
     const link = node('a', '', `QS ${place.ranking.edition} · #${place.ranking.rankDisplay}（学校整体）`); link.href = rankUrl; link.target = '_blank'; link.rel = 'noopener noreferrer';
     body.append(detailRow('university', link));
   }
-  if (place.university?.campusName) body.append(detailRow('university', place.university.campusName));
+  if (place.university?.campusName || place.university?.campusNameEn) body.append(detailRow('university', place.university.campusName || place.university.campusNameEn));
   if (isVerifiedBuffet(place)) {
-    const proof = place.dining.buffetVerification;
+    const proof = place.dining.buffetVerification || place.dining.serviceVerification;
     const link = node('a', '', '自助餐 · 官网已核验'); link.href = safeUrl(proof.sourceUrl); link.target = '_blank'; link.rel = 'noopener noreferrer';
     link.title = `${proof.checkedAt} · ${proof.excerpt}`;
     body.append(detailRow('info', link));
+  }
+  if (isBrandBuffet(place)) {
+    const proof = place.dining.buffetVerification;
+    const link = node('a', '', '按品牌标记 · 此店未单独核验'); link.href = safeUrl(proof.sourceUrl); link.target = '_blank'; link.rel = 'noopener noreferrer';
+    link.title = `${proof.checkedAt} · 品牌依据门店：${proof.sourcePlaceId}`;
+    body.append(detailRow('info', link));
+  }
+  for (const service of place.coLocatedServices || []) {
+    const url = safeUrl(service.officialUrl); if (!url) continue;
+    const link = node('a', '', `${service.name} · 同址品牌标记`); link.href = url; link.target = '_blank'; link.rel = 'noopener noreferrer';
+    body.append(detailRow('utensils', link));
   }
   if (place.visitNote) {
     const visitUrl = safeUrl(place.visitInfoUrl || place.website);
@@ -190,8 +235,13 @@ function renderDetail(place) {
   if (website) { const link = node('a', '', new URL(website).hostname.replace(/^www\./, '')); link.href = website; link.target = '_blank'; link.rel = 'noopener noreferrer'; body.append(detailRow('globe', link)); }
   const copy = node('button', '', `${place.position.lat.toFixed(6)}, ${place.position.lng.toFixed(6)}`); copy.style.cssText = 'padding:0;color:#5f6368;text-align:left'; copy.title = '复制坐标'; copy.addEventListener('click', async () => { try { await navigator.clipboard.writeText(`${place.position.lat}, ${place.position.lng}`); toast('坐标已复制'); } catch { toast('当前浏览器不支持复制'); } }); body.append(detailRow('copy', copy));
   const sourceUrl = place.sourceUrls?.map(safeUrl).find(Boolean);
-  if (sourceUrl) { const link = node('a', '', place.sourceLabel || (place.sourceIds?.wikidata ? 'Wikidata' : 'OpenStreetMap')); link.href = sourceUrl; link.target = '_blank'; link.rel = 'noopener noreferrer'; body.append(detailRow('info', link)); }
-  body.append(node('p', 'detail-note', place.position.kind === 'campus-reference' ? '校区参考位置，入口未核验。' : place.position.kind === 'area-reference' ? '区域参考位置，出发前请查看官网。' : place.entrance ? '路线以已核验入口为目的地。' : '入口未核验，出发前请查看官网。'));
+  if (sourceUrl) {
+    const host = new URL(sourceUrl).hostname;
+    const label = place.sourceLabel || (host.endsWith('food.gov.uk') ? 'Food Standards Agency' : host.endsWith('wikidata.org') ? 'Wikidata' : host.endsWith('openstreetmap.org') ? 'OpenStreetMap' : '位置资料来源');
+    const link = node('a', '', label); link.href = sourceUrl; link.target = '_blank'; link.rel = 'noopener noreferrer'; body.append(detailRow('info', link));
+  }
+  const naturePointNotes = { 'visitor-centre': '标点为游客中心参考位置，请在官网确认当日开放情况。', trailhead: '标点为步道起点参考位置，请在官网确认路线与通行情况。', 'feature-reference': '标点为自然景物参考位置，出发前请查看官网推荐的入口与路线。', 'area-reference': '区域参考位置，出发前请查看官网推荐的入口与路线。' };
+  body.append(node('p', 'detail-note', place.category === 'nature' ? (naturePointNotes[place.nature?.pointRole] || '景区参考位置，出发前请查看官网。') : place.position.kind === 'campus-reference' ? '校区参考位置，入口未核验。' : place.position.kind === 'area-reference' ? '区域参考位置，出发前请查看官网。' : place.entrance ? '路线以已核验入口为目的地。' : '入口未核验，出发前请查看官网。'));
   $('detail').replaceChildren(back, cover, body);
 }
 function selectPlace(id) {
@@ -201,9 +251,10 @@ function selectPlace(id) {
   renderDetail(place); $('detail').hidden = false; $('results').hidden = true; $('results-heading').hidden = true;
   $('dining-filters').hidden = true;
   $('university-filters').hidden = true;
+  $('nature-filters').hidden = true;
   map.select(id); setSheet('normal');
 }
-function closeDetail() { state.selected = null; $('detail').hidden = true; $('results').hidden = false; $('results-heading').hidden = false; $('dining-filters').hidden = state.category !== 'restaurant'; $('university-filters').hidden = state.category !== 'university' || state.mode === 'saved'; map.select(null, false); }
+function closeDetail() { state.selected = null; $('detail').hidden = true; $('results').hidden = false; $('results-heading').hidden = false; $('dining-filters').hidden = state.category !== 'restaurant'; $('university-filters').hidden = state.category !== 'university' || state.mode === 'saved'; $('nature-filters').hidden = state.category !== 'nature' || state.mode === 'saved'; map.select(null, false); }
 function setMode(mode) {
   state.mode = mode; closeDetail(); state.query = ''; $('search').value = '';
   for (const [id, active] of [['nav-explore', mode === 'explore'], ['nav-saved', mode === 'saved']]) { $(id).classList.toggle('active', active); $(id).setAttribute('aria-pressed', String(active)); }
@@ -217,6 +268,7 @@ async function changeCenter(position, city = null, label = '地图选点') {
   else { customCenterOption.textContent = label; $('city').value = 'custom'; }
   $('mobile-saved').setAttribute('aria-pressed', 'false'); $('mobile-saved').classList.remove('active');
   if (state.category === 'university') state.universityNationwide = false;
+  if (state.category === 'nature') state.natureNationwide = false;
   map.flyTo(position, city?.zoom || 13); $('search-area').hidden = true;
   if (!city && state.radius === 'all') { state.radius = 25; $('radius').value = '25'; }
   await loadPlaces();
@@ -273,7 +325,13 @@ try {
   const index = await store.init();
   $('coverage-label').textContent = index.coverage.sample ? '首批收录' : '开放景点数据';
   const info = $('dataset-info');
-  for (const [key, value] of [['已收录', `${index.count} 个地点`], ['覆盖', index.coverage.sample ? '英国部分景点' : '按开放数据规则提取'], ['更新', new Date(index.generatedAt).toLocaleDateString('zh-CN')]]) info.append(node('dt', '', key), node('dd', '', value));
+  const universities = index.coverage.universities;
+  const details = [['已收录', `${index.count} 个地点`], ['覆盖', index.coverage.sample ? '英国部分地点' : '按开放数据规则提取']];
+  if (index.coverage.buffets) details.push(['自助餐', `${index.coverage.buffets.totalMarked || index.coverage.buffets.officialVerified} 家 · 品牌标记 ${index.coverage.buffets.brandInferred || 0} 家`]);
+  if (index.coverage.nature) details.push(['自然', `${index.coverage.nature.count} 个位置 · ${Object.keys(index.coverage.nature.types).length} 类`]);
+  if (universities) details.push(['大学', `${universities.institutionsMapped || universities.count} 所学校 · ${universities.locationPoints || universities.count} 个位置`], ['校区', universities.completeForAllUKCampuses ? '已完成目录核对' : '持续补充，尚非全量'], ['QS', '2027 世界总榜；按学校整体排名筛选，区间按上限计算；排名资料持续补充']);
+  details.push(['更新', new Date(index.generatedAt).toLocaleDateString('zh-CN')]);
+  for (const [key, value] of details) info.append(node('dt', '', key), node('dd', '', value));
   await loadPlaces();
   await refreshSavedPlaces();
   document.body.dataset.appReady = 'true';

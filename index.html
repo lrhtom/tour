@@ -8,8 +8,8 @@
   <title>行迹 · 英国旅行地图</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2040%2048%22%3E%3Cpath%20fill%3D%22%231a73e8%22%20d%3D%22M20%200A20%2020%200%200%200%200%2020c0%2012%2020%2028%2020%2028s20-16%2020-28A20%2020%200%200%200%2020%200Z%22%2F%3E%3Ccircle%20cx%3D%2220%22%20cy%3D%2219%22%20r%3D%227%22%20fill%3D%22%23fff%22%2F%3E%3C%2Fsvg%3E%0A" type="image/svg+xml">
   <link rel="stylesheet" href="./vendor/maplibre/maplibre-gl.css">
-  <link rel="stylesheet" href="./css/style.css">
-  <script defer src="./js/boot.js"></script>
+  <link rel="stylesheet" href="./css/style.css?v=20261110-nature-8">
+  <script defer src="./js/boot.js?v=20261110-nature-8"></script>
 <!--
 # Data and map credits
 
@@ -47,7 +47,7 @@ MapLibre GL JS and PMTiles use BSD licenses; included copies are under `vendor/`
         <button class="search-submit icon-button" type="submit" aria-label="搜索"><span data-icon="arrow-right"></span></button>
       </form>
       <div class="location-row">
-        <label class="city-select"><span data-icon="pin"></span><select id="city" aria-label="选择目的地城市"></select><span class="select-chevron" data-icon="chevron-down"></span></label>
+        <label class="city-select"><span data-icon="pin"></span><select id="city" aria-label="选择目的地"></select><span class="select-chevron" data-icon="chevron-down"></span></label>
         <button class="locate-text" id="locate-inline"><span data-icon="locate"></span>我的位置</button>
       </div>
     </header>
@@ -62,7 +62,12 @@ MapLibre GL JS and PMTiles use BSD licenses; included copies are under `vendor/`
     <div class="university-filters" id="university-filters" role="group" aria-label="大学范围" hidden>
       <button class="dining-chip" type="button" data-university-scope="nearby" aria-pressed="false">附近</button>
       <button class="dining-chip active" type="button" data-university-scope="uk" aria-pressed="true">全英国</button>
-      <button class="dining-chip" id="university-qs" type="button" aria-pressed="false" title="按学校整体排名筛选">QS 前600</button>
+      <label class="qs-limit" title="QS 2027 学校整体排名；留空显示全部"><span>QS 前</span><input id="university-qs" type="number" min="1" step="1" inputmode="numeric" placeholder="全部" aria-label="QS 排名上限，留空显示全部"></label>
+    </div>
+    <div class="nature-filters" id="nature-filters" role="group" aria-label="自然景点筛选" hidden>
+      <button class="dining-chip active" type="button" data-nature-scope="nearby" aria-pressed="true">附近</button>
+      <button class="dining-chip" type="button" data-nature-scope="uk" aria-pressed="false">全英国</button>
+      <label class="cuisine-select"><select id="nature-type" aria-label="自然景点类型"><option value="all">全部类型</option></select><span data-icon="chevron-down"></span></label>
     </div>
     <div class="results-list" id="results" aria-label="景点搜索结果" aria-busy="true"></div>
     <section class="detail" id="detail" aria-label="景点详情" hidden></section>

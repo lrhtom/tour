@@ -16,7 +16,9 @@
     return;
   }
   const scriptUrl = document.currentScript.src;
-  import(new URL('./app.js', scriptUrl).href).catch(error => {
+  const appUrl = new URL('./app.js', scriptUrl);
+  appUrl.search = new URL(scriptUrl).search;
+  import(appUrl.href).catch(error => {
     console.error('App startup failed:', error);
     showMessage('页面暂时无法加载', '请刷新重试，或重新启动本地预览。');
   });
